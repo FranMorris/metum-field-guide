@@ -9,8 +9,3 @@ My name is Fran! I am a postdoc, or if you want a longer job title, I am a Postd
 This basically means that what I do is run high-resolution climate models - or try to, anyway... 
 
 And when I can't run the model (and sometimes on the rare occasions where I can), I write about it here!
-
-
-### Theme
-
-This site uses the [Lagrange theme](https://github.com/lenpaul/lagrange) under the [MIT License](http://choosealicense.com/licenses/mit/).
