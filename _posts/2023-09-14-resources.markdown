@@ -29,7 +29,7 @@ Now, we've talked about UM-related skills - understanding automation, version co
 
 The second extremely useful thing that NCAS CMS provide are the [helpdesk forums](https://cms-helpdesk.ncas.ac.uk/). Here you can find pretty much every question that the modelling team have been asked in the last two years, which is pretty helpful. If you get an error, you can usually find someone who's had it before using the search function - often in three or four different ways. Some users leave incredibly helpful step-by-step instructions once they have figured out how to make something work, and even just seeing the discussions various UM users are having with NCAS staff can be really productive to learn about the debugging process and the logical ways of figuring out what's going wrong with your setup. If this overwhelmingly positive description is not enough, perhaps my user stats (from just the past six weeks!) are testament to how useful the forums are:
 
-![frans-cms-forum-user-stats](../assets/img/cms_forum_user_stats.png){:class="img-responsive"}
+![frans-cms-forum-user-stats](../assets/img/cms_forum_user_stats.png)
 
 I am somewhat alarmed that this data was being tracked, and also that I have been so transparently revealed as a forum lurker with a measly 5 posts or something similar. (Still, it's very useful to look at approximately 97 topics and know that I'm asking a question that I don't believe has been addressed in any of those.)
 

@@ -1,0 +1,43 @@
+---
+layout: post
+title:  "Oom and Gloom: Addressing out-of-memory problems"
+date:   2023-09-29 10:00:23 +0100
+categories: um errors ancils memory
+---
+
+One of the first things I started to have issues with when I was running simulations - well, once I'd got them submitted, anyway - was memory problems. Now, I have the rather specific circumstance of running really rather large regional domains, and doing this on a computer that is not owned by the Met Office. There are not a huge number of people running regional simulations on ARCHER2, and I think it is quite possible that this might be one of the largest regional simulations that is being run there. I think the grid will end up having 3000x2500 points when we start running simulations properly. That's a lot of grid points, I think. And it appears that ARCHER2 thinks that too. 
+
+Now, before you start running UM simulations you need to have ancils - ancillary files - in a particular format. Some suites need lots and lots of these! Others need fewer. And in the UM tutorial, you do not need to generate any ancils at all because they are all pre-generated, which is very convenient. However, it turns out trying to make these ancils can be quite a time-consuming, and node-consuming, task, and there isn't a lot of clarity on how to deal with them. I don't really feel qualified at this point to give a full summary of the ways that ancils can be made, but I hope to return to this topic for a post when I know more.
+
+Instead, this post focuses on the memory-related errors I got while trying to generate ancils, and ways in which I dealt with them on ARCHER2. 
+
+While trying to generate ancils, I would regularly check the `job.err` files only to find the same message:
+
+`slurmstepd: error: Detected 1 oom-kill event(s) in StepId=#######.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.`
+
+# The Fixes? 
+I should emphasise that I do not know if such fixes are considered good practice or even if they should or will work at all. However, these did seem to make things better for me and as a result I thought it might be worthwhile to write them down - as much for my future self to understand what I tried to do as for anyone else who might manage to stumble across this. So here are some options for changes you can make or things you can do to make these errors go away.
+
+## Try again
+Sometimes memory errors are slightly random and you can somehow force things to work just by running tasks again. A cylc task fails with an oom error? Simply re-trigger it. This is not a very efficient or reliable step, but is something that much wiser UM users than I have recommended, so I felt the suggestion should be included for completeness.
+
+## Change the sbatch `--memory` setting
+Naturally, one of the first things I did when I encountered this error was search for it on the CMS forums. I found [this post](https://cms-helpdesk.ncas.ac.uk/t/submit-failed/693/4) which suggests that you simply locate the relevant task in some `.rc` file, and under `[[[directives]]]` add a `--memory` parameter. Doing so will edit the sbatch job script that is submitted alongside a task (which is just called `job` - you can view this if you right click the task in the Cylc gscan GUI, or by going to `~/cylc-run/<suite-id>/log/job/XX` where `XX` is the number of run you've submitted). 
+
+Now, this only works for jobs that are submitted as serial processes. If you're specifying numbers of CPUs per task or that a task should be done over multiple nodes (usually indicated by the word MPP in the task name or in the name of some inherited part) then you'll have to look at the next subheading. But if it's serial, increasing the specified memory should help.
+
+You may find that the task you are editing does not have a specified memory parameter under `[[[directives]]]`, in which case you can add one. Unless it inherits memory from another class, the default memory associated with submitted jobs on serial nodes is 1984 MiB, or a little under 2 GB, which I discovered by scrolling through [this page](https://docs.archer2.ac.uk/user-guide/analysis/) on the ARCHER2 website. 
+
+## Change the sbatch `--ntasks-per-node` setting
+Great stuff if you have a serial task. But how do you deal with things that are running in parallel? I could not find a CMS forum answer about this, but I eventually found a solution which sort-of works some of the time on the [ARCHER2 FAQ page](https://docs.archer2.ac.uk/faq/). The issue that results in oom errors is that each process is requesting too much memory, which can be solved by allocating fewer tasks per node - the website recommends halving it. 
+
+In the case of ARCHER2, most of these sbatch changes can be made by editing the `~/roses/<suite-id>/site/ncas-cray-ex/suite-adds.rc` file, although some I located in the specific ancillary settings in `~/roses/<suite-id>/suite-runtime/ancils.rc`. 
+
+## Think about what you are doing and whether you need to do it
+But even setting the `--ntasks-per-node` to a remarkably low 8 for the dust ancillary file generation, I still ended up having problems. It just would not formulate! I reduced the size of the domain and found that it was quite straightforward to make it work for smaller regions - so it was just the size of the region that made it difficult. Eventually, I managed to get another error - also, technically, a memory error: I had run out of storage space.
+
+A quick look revealed that I'd started generating dust - and indeed many types of aerosol - ancillary files which were 100GB+ in size, which is really quite big. I had also noticed a switch, in some suites, that changed some runtime settings specifically for "k-scale" work - namely, high resolution models. The 'help' information indicated that the k-scale settings would ignore any three-dimensional aerosol ancillaries that were available and simply downscale them from global model output, because otherwise the ancil files become unwieldy. So it wasn't just me! It is, in fact, a valid thing to do to ignore dust entirely and delete the whole set of enormous aerosol files which were causing problems. Then, switching off the `rg01_rs01_3D_ancils` setting, it was possible to get the model to run - even where I'd failed to generate a full dust file.
+
+So if you're running something and it's taking ages, or using way too much memory - ask yourself, or your Met Office colleagues who work on similar kilometre-scale models, whether this is really something you need to do. Maybe there are other options! Maybe there are ways around it. And maybe you too can free up several terabytes of storage.
+
+Good luck!
